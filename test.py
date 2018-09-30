@@ -23,6 +23,7 @@ def test_split(index, value, dataset):
 	return left_part, right_part
 def get_entropy_of_split(groups,size):
 	entropy=0
+	size=float(size)
 	for group in groups:
 		normalzd_group_size=len(group)/size
 		n=0
@@ -34,16 +35,15 @@ def get_entropy_of_split(groups,size):
 			else:
 				n+=1
 		total=len(group)
-		size=float(size)
 		if p==0:
 			p=size
 		if n==0:
 			n=size
 		entropy+=normalzd_group_size*(-1*((n/size)*np.log2(n/size) + (p/size)*np.log2(p/size)))
 	return entropy
-def get_best_split(dataset,size):
+def get_best_split(dataset):
 	entropy=0
-	size=float(size)
+
 	n=0
 	p=0
 	for vect in dataset:
@@ -51,10 +51,15 @@ def get_best_split(dataset,size):
 			n+=1
 		else:
 			p+=1
+	size=float(n+p)
+	if n==0:
+		n=size
+	if p==0:
+		p=size
 	entropy=-1*((n/size)*np.log2(n/size) + (p/size)*np.log2(p/size))
 	best_info_gain=-1000
 	best_f_index=0
-	best_groups=None
+	best_groups=[[],[]]
 	for f_index in range(0,len(dataset[0])-1):
 		for row in dataset:
 			groups=test_split(f_index,row[f_index],dataset)
@@ -68,18 +73,26 @@ def get_best_split(dataset,size):
 			,'best_groups':best_groups}
 
 def build_tree(train, max_depth, min_size):
-	root = get_best_split(train,len(train))
-	split(root, max_depth, min_size, 1,len(train))
+	root = get_best_split(train)
+	split(root, max_depth, min_size, 1)
 	return root
 
 def to_terminal(group):
-	outcomes = [row[-1] for row in group]
-	return max(set(outcomes), key=outcomes.count)
+	count=0
+	count1=0
+	for row in group:
+		if(row[-1]==0):
+			count+=1
+		else:
+			count1+=1
+	if(count>=count1):
+		return 0.0
+	else:
+		return 1.0
 
-def split(node, max_depth, min_size, depth,size):
+def split(node, max_depth, min_size, depth):
 	left, right = node['best_groups']
 	del(node['best_groups'])
-	# check for a no split
 	if not left or not right:
 		node['left'] = node['right'] = to_terminal(left + right)
 		return
@@ -87,18 +100,18 @@ def split(node, max_depth, min_size, depth,size):
 	if depth >= max_depth:
 		node['left'], node['right'] = to_terminal(left), to_terminal(right)
 		return
-	# process left child
 	if len(left) <= min_size:
 		node['left'] = to_terminal(left)
 	else:
-		node['left'] = get_best_split(left,size)
-		split(node['left'], max_depth, min_size, depth+1,size)
+		node['left'] = get_best_split(left)
+		split(node['left'], max_depth, min_size, depth+1)
 	# process right child
 	if len(right) <= min_size:
 		node['right'] = to_terminal(right)
 	else:
-		node['right'] = get_best_split(right,size)
-		split(node['right'], max_depth, min_size, depth+1,size)
+		node['right'] = get_best_split(right)
+		split(node['right'], max_depth, min_size, depth+1)
+
 
 def predict(node, row):
 	if row[node['best_f_index']] < node['best_information_gain']:
@@ -147,6 +160,7 @@ for vect in dataset:
 max_depth=5
 min_size=9
 predicted=decision_tree(train_set,test_set,max_depth,min_size)
+print predicted
 actual = [row[-1] for row in test_set]
 correct=0
 for i in range(len(actual)):

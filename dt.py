@@ -23,6 +23,8 @@ def test_split(index, value, dataset):
 	return left_part, right_part
 def get_entropy_of_split(groups,size):
 	entropy=0
+	size=float(size)
+	# size=float(len(groups[0])+len(groups[1]))
 	for group in groups:
 		normalzd_group_size=len(group)/size
 		n=0
@@ -52,7 +54,7 @@ def get_best_split(dataset,size):
 		else:
 			p+=1
 	entropy=-1*((n/size)*np.log2(n/size) + (p/size)*np.log2(p/size))
-	best_info_gain=-1000
+	best_info_gain=0
 	best_f_index=0
 	best_groups=None
 	for f_index in range(0,len(dataset[0])-1):
@@ -60,6 +62,7 @@ def get_best_split(dataset,size):
 			groups=test_split(f_index,row[f_index],dataset)
 			entropy_of_split=get_entropy_of_split(groups,len(dataset))
 			information_gain=entropy-entropy_of_split
+			# print(information_gain)
 			if(information_gain > best_info_gain):
 				best_info_gain = information_gain
 				best_f_index = f_index
@@ -94,3 +97,5 @@ max_depth=5
 depth=0
 
 dict=get_best_split(train_set,len(train_set))
+print(dict['best_information_gain'])
+print(len(dict["best_groups"][1]))
