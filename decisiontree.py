@@ -13,7 +13,7 @@ def conv_float(dataset, column):
 
 # Build a decision tree
 def build_tree(train, max_depth, min_size):
-	root = get_split(train)
+	root = best_split(train)
 	split(root, max_depth, min_size, 1)
 	return root
 # Calculate the Gini index for a split dataset
@@ -36,22 +36,22 @@ def gini_index(groups, classes):
 		gini += (1.0 - score) * (size / n_instances)
 	return gini
 # Split a dataset based on an attribute and an attribute value
-def test_split(index, value, dataset):
-	left, right = list(), list()
+def temp_split(index, value, dataset):
+	left_part, right = list(), list()
 	for row in dataset:
 		if row[index] < value:
-			left.append(row)
+			left_part.append(row)
 		else:
 			right.append(row)
-	return left, right
+	return left_part, right
 # Select the best split point for a dataset
-def get_split(dataset):
-	class_values = list(set(row[-1] for row in dataset))
-	b_index, b_value, b_score, b_groups = 999, 999, 999, None
-	for index in range(len(dataset[0])-1):
-		for row in dataset:
-			groups = test_split(index, row[index], dataset)
-			gini = gini_index(groups, class_values)
+def best_split(train_set):
+	outcomes = list(set(row[-1] for row in train_set))
+	b_index, b_value, b_score, b_groups = rand.randint(1,len(train_set)), rand.randint(1,len(train_set)), rand.randint(1,len(train_set)), None
+	for index in range(len(train_set[0])-1):
+		for row in train_set:
+			groups = temp_split(index, row[index], train_set)
+			gini = gini_index(groups, outcomes)
 			if gini < b_score:
 				b_index, b_value, b_score, b_groups = index, row[index], gini, groups
 	return {'index':b_index, 'value':b_value, 'groups':b_groups}
@@ -77,13 +77,13 @@ def split(node, max_depth, min_size, depth):
 	if len(left) <= min_size:
 		node['left'] = to_terminal(left)
 	else:
-		node['left'] = get_split(left)
+		node['left'] = best_split(left)
 		split(node['left'], max_depth, min_size, depth+1)
 	# process right child
 	if len(right) <= min_size:
 		node['right'] = to_terminal(right)
 	else:
-		node['right'] = get_split(right)
+		node['right'] = best_split(right)
 		split(node['right'], max_depth, min_size, depth+1)
 
 # Make a prediction with a decision tree
