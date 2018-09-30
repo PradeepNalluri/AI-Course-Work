@@ -16,12 +16,12 @@ def build_tree(train, max_depth, min_size):
 	root = best_split(train)
 	split(root, max_depth, min_size, 1)
 	return root
-# Calculate the Gini index for a split dataset
-def gini_index(groups, classes):
+# Calculate the score_val index for a split dataset
+def info_gain(groups, classes):
 	# count all samples at split point
 	n_instances = float(sum([len(group) for group in groups]))
-	# sum weighted Gini index for each group
-	gini = 0.0
+	# sum weighted score_val index for each group
+	score_val = 0.0
 	for group in groups:
 		size = float(len(group))
 		# avoid divide by zero
@@ -33,8 +33,8 @@ def gini_index(groups, classes):
 			p = [row[-1] for row in group].count(class_val) / size
 			score += p * p
 		# weight the group score by its relative size
-		gini += (1.0 - score) * (size / n_instances)
-	return gini
+		score_val += (1.0 - score) * (size / n_instances)
+	return score_val
 # Split a dataset based on an attribute and an attribute value
 def temp_split(index, value, dataset):
 	left_part, right = list(), list()
@@ -51,9 +51,9 @@ def best_split(train_set):
 	for index in range(len(train_set[0])-1):
 		for row in train_set:
 			groups = temp_split(index, row[index], train_set)
-			gini = gini_index(groups, outcomes)
-			if gini < b_score:
-				b_index, b_value, b_score, b_groups = index, row[index], gini, groups
+			score_val = info_gain(groups, outcomes)
+			if score_val < b_score:
+				b_index, b_value, b_score, b_groups = index, row[index], score_val, groups
 	return {'index':b_index, 'value':b_value, 'groups':b_groups}
 
 # Create a terminal node value
@@ -118,7 +118,7 @@ train_len=len(dataset)-test_len
 count=0
 test_set=[]
 while(count<test_len):
-    rand_num=rand.randint(0,len(dataset))
+    rand_num=rand.randint(0,len(dataset)-1)
     if(dataset[rand_num] in test_set):
         pass
     else:
