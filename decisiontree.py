@@ -1,67 +1,21 @@
-from random import seed
-from random import randrange
 from csv import reader
+import random as rand
+#Dataset processing
 def get_data(filename):
 	file = open(filename, "rb")
 	lines = reader(file)
 	dataset = list(lines)
 	return dataset
-
-# Convert string column to float
+#Convert to floats
 def conv_float(dataset, column):
 	for row in dataset:
 		row[column] = float(row[column].strip())
 
-# Split a dataset into k folds
-def cross_validation_split(dataset, n_folds):
-	dataset_split = list()
-	dataset_copy = list(dataset)
-	fold_size = int(len(dataset) / n_folds)
-	for i in range(n_folds):
-		fold = list()
-		while len(fold) < fold_size:
-			index = randrange(len(dataset_copy))
-			fold.append(dataset_copy.pop(index))
-		dataset_split.append(fold)
-	return dataset_split
-
-# Calculate accuracy percentage
-def accuracy_metric(actual, predicted):
-	correct = 0
-	for i in range(len(actual)):
-		if actual[i] == predicted[i]:
-			correct += 1
-	return correct / float(len(actual)) * 100.0
-
-# Evaluate an algorithm using a cross validation split
-def evaluate_algorithm(dataset, algorithm, n_folds, *args):
-	folds = cross_validation_split(dataset, n_folds)
-	scores = list()
-	for fold in folds:
-		train_set = list(folds)
-		train_set.remove(fold)
-		train_set = sum(train_set, [])
-		test_set = list()
-		for row in fold:
-			row_copy = list(row)
-			test_set.append(row_copy)
-			row_copy[-1] = None
-		predicted = algorithm(train_set, test_set, *args)
-		actual = [row[-1] for row in fold]
-		accuracy = accuracy_metric(actual, predicted)
-		scores.append(accuracy)
-	return scores
-
-# Split a dataset based on an attribute and an attribute value
-def test_split(index, value, dataset):
-	left, right = list(), list()
-	for row in dataset:
-		if row[index] < value:
-			left.append(row)
-		else:
-			right.append(row)
-	return left, right
-
+# Build a decision tree
+def build_tree(train, max_depth, min_size):
+	root = get_split(train)
+	split(root, max_depth, min_size, 1)
+	return root
 # Calculate the Gini index for a split dataset
 def gini_index(groups, classes):
 	# count all samples at split point
@@ -81,7 +35,15 @@ def gini_index(groups, classes):
 		# weight the group score by its relative size
 		gini += (1.0 - score) * (size / n_instances)
 	return gini
-
+# Split a dataset based on an attribute and an attribute value
+def test_split(index, value, dataset):
+	left, right = list(), list()
+	for row in dataset:
+		if row[index] < value:
+			left.append(row)
+		else:
+			right.append(row)
+	return left, right
 # Select the best split point for a dataset
 def get_split(dataset):
 	class_values = list(set(row[-1] for row in dataset))
@@ -124,12 +86,6 @@ def split(node, max_depth, min_size, depth):
 		node['right'] = get_split(right)
 		split(node['right'], max_depth, min_size, depth+1)
 
-# Build a decision tree
-def build_tree(train, max_depth, min_size):
-	root = get_split(train)
-	split(root, max_depth, min_size, 1)
-	return root
-
 # Make a prediction with a decision tree
 def predict(node, row):
 	if row[node['index']] < node['value']:
@@ -143,7 +99,7 @@ def predict(node, row):
 		else:
 			return node['right']
 
-# Classification and Regression Tree Algorithm
+#Decision tree
 def decision_tree(train, test, max_depth, min_size):
 	tree = build_tree(train, max_depth, min_size)
 	predictions = list()
@@ -152,15 +108,37 @@ def decision_tree(train, test, max_depth, min_size):
 		predictions.append(prediction)
 	return(predictions)
 
-seed(1)
+#file name
 filename = 'dataset.txt'
 dataset = get_data(filename)
 for i in range(len(dataset[0])):
 	conv_float(dataset, i)
-# evaluate algorithm
-n_folds = 2
+test_len=int(0.1*len(dataset))
+train_len=len(dataset)-test_len
+count=0
+test_set=[]
+while(count<test_len):
+    rand_num=rand.randint(0,len(dataset))
+    if(dataset[rand_num] in test_set):
+        pass
+    else:
+        test_set.append(dataset[rand_num])
+        count+=1
+train_set=[]
+count=0
+for vect in dataset:
+    if vect in test_set:
+        count+=1
+        pass
+    else:
+        train_set.append(vect)
 max_depth = 5
-min_size = 10
-scores = evaluate_algorithm(dataset, decision_tree, n_folds, max_depth, min_size)
-print('Scores: %s' % scores)
-print('Mean Accuracy: %.3f%%' % (sum(scores)/float(len(scores))))
+min_size = 9
+predicted= decision_tree(train_set, test_set,max_depth,min_size)
+correct = 0
+actual = [row[-1] for row in test_set]
+for i in range(len(actual)):
+	if actual[i] == predicted[i]:
+		correct += 1
+print correct / float(len(actual)) * 100.0
+#/len(test_set))*100
