@@ -67,7 +67,58 @@ def get_best_split(dataset,size):
 	return {'best_information_gain':best_info_gain,'best_f_index':best_f_index
 			,'best_groups':best_groups}
 
+def build_tree(train, max_depth, min_size):
+	root = get_best_split(train,len(train))
+	split(root, max_depth, min_size, 1,len(train))
+	return root
 
+def to_terminal(group):
+	outcomes = [row[-1] for row in group]
+	return max(set(outcomes), key=outcomes.count)
+
+def split(node, max_depth, min_size, depth,size):
+	left, right = node['best_groups']
+	del(node['best_groups'])
+	# check for a no split
+	if not left or not right:
+		node['left'] = node['right'] = to_terminal(left + right)
+		return
+	# check for max depth
+	if depth >= max_depth:
+		node['left'], node['right'] = to_terminal(left), to_terminal(right)
+		return
+	# process left child
+	if len(left) <= min_size:
+		node['left'] = to_terminal(left)
+	else:
+		node['left'] = get_best_split(left,size)
+		split(node['left'], max_depth, min_size, depth+1,size)
+	# process right child
+	if len(right) <= min_size:
+		node['right'] = to_terminal(right)
+	else:
+		node['right'] = get_best_split(right,size)
+		split(node['right'], max_depth, min_size, depth+1,size)
+
+def predict(node, row):
+	if row[node['best_f_index']] < node['best_information_gain']:
+		if isinstance(node['left'], dict):
+			return predict(node['left'], row)
+		else:
+			return node['left']
+	else:
+		if isinstance(node['right'], dict):
+			return predict(node['right'], row)
+		else:
+			return node['right']
+
+def decision_tree(train, test, max_depth, min_size):
+	tree = build_tree(train, max_depth, min_size)
+	predictions = list()
+	for row in test:
+		prediction = predict(tree, row)
+		predictions.append(prediction)
+	return(predictions)
 
 
 filename = 'dataset.txt'
@@ -93,6 +144,12 @@ for vect in dataset:
         pass
     else:
         train_set.append(vect)
-print "len is ",len(train_set)
-dict=get_best_split(train_set,len(train_set))
-print(dict['best_information_gain'])
+max_depth=5
+min_size=9
+predicted=decision_tree(train_set,test_set,max_depth,min_size)
+actual = [row[-1] for row in test_set]
+correct=0
+for i in range(len(actual)):
+	if actual[i] == predicted[i]:
+		correct += 1
+print correct / float(len(actual)) * 100.0
