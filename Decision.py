@@ -136,55 +136,45 @@ filename = 'dataset.txt'
 dataset = get_data(filename)
 for i in range(len(dataset[0])):
 	conv_float(dataset, i)
+test_len=int(0.1*len(dataset))
+train_len=len(dataset)-test_len
+count=0
+test_set=[]
+while(count<test_len):
+    rand_num=rand.randint(0,len(dataset)-1)
+    if(dataset[rand_num] in test_set):
+        pass
+    else:
+        test_set.append(dataset[rand_num])
+        count+=1
+train_set=[]
+count=0
+for vect in dataset:
+    if vect in test_set:
+        count+=1
+        pass
+    else:
+        train_set.append(vect)
 max_depth=5
 min_size=10
-# predicted=decision_tree(train_set,test_set,max_depth,min_size)
-# print predicted
-# actual = [row[-1] for row in test_set]
-# correct=0
-# for i in range(len(actual)):
-# 	if actual[i] == predicted[i]:
-# 		correct += 1
-# print correct / float(len(actual)) * 100.0
-
 #splitting
 k=9
-split_len=int(len(dataset)/k)
-dataset_copy=dataset
+split_len=int(train_len/k)
+train_set_copy=train_set
 folded_set=[]
 for i in range(k):
 	folded_set.append([])
-	while(len(folded_set[i])<split_len and len(dataset_copy)>0):
+	while(len(folded_set[i])<split_len and len(train_set_copy)>0):
 		# print(len(folded_set[i]),split_len)
-		index = rand.randrange(len(dataset_copy))
-		folded_set[i].append(dataset_copy.pop(index))
+		index = rand.randrange(len(train_set_copy))
+		folded_set[i].append(train_set_copy.pop(index))
 test_acc=[]
-for fold in folded_set:
-	test_len=int(0.1*len(fold))
-	train_len=len(fold)-test_len
-	count=0
-	test_set=[]
-	while(count<test_len):
-	    rand_num=rand.randint(0,len(fold)-1)
-	    if(fold[rand_num] in test_set):
-	        pass
-	    else:
-	        test_set.append(fold[rand_num])
-	        count+=1
-	train_set=[]
-	count=0
-	for vect in fold:
-	    if vect in test_set:
-	        count+=1
-	        pass
-	    else:
-			train_set.append(vect)
-	print(len(train_set),len(test_set))
-	predicted=decision_tree(train_set,test_set,max_depth,min_size)
+for i in folded_set:
+	predicted=decision_tree(i,test_set,max_depth,min_size)
 	actual = [row[-1] for row in test_set]
 	correct=0
 	for i in range(len(actual)):
 		if actual[i] == predicted[i]:
 			correct += 1
 	test_acc.append(correct / float(len(actual)) * 100.0)
-print(test_acc)
+print(max(test_acc))
