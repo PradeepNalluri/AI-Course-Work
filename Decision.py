@@ -69,7 +69,8 @@ def get_best_split(dataset):
 				best_info_gain = information_gain
 				best_f_index = f_index
 				best_groups = groups
-	return {'best_information_gain':best_info_gain,'best_f_index':best_f_index
+				best_value=row[f_index]
+	return {'best_value':best_value,'best_f_index':best_f_index
 			,'best_groups':best_groups}
 
 def build_tree(train, max_depth, min_size):
@@ -112,7 +113,7 @@ def make_child(node, max_depth, min_size, depth):
 
 
 def predict(node, row):
-	if row[node['best_f_index']] < node['best_information_gain']:
+	if row[node['best_f_index']] < node['best_value']:
 		if isinstance(node['left'], dict):
 			return predict(node['left'], row)
 		else:
