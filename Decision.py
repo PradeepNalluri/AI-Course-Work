@@ -155,23 +155,35 @@ for vect in dataset:
 max_depth=5
 min_size=10
 #splitting
-k=9
-split_len=int(train_len/k)
-train_set_copy=train_set
-folded_set=[]
-for i in range(k):
-	folded_set.append([])
-	while(len(folded_set[i])<split_len and len(train_set_copy)>0):
-		# print(len(folded_set[i]),split_len)
-		index = rand.randrange(len(train_set_copy))
-		folded_set[i].append(train_set_copy.pop(index))
-test_acc=[]
-for i in folded_set:
-	predicted=decision_tree(i,test_set,max_depth,min_size,classes)
+n=input("Press 1 for bagging else press anyting for without bagging:")
+if(n==1):
+	k=input("Number of folds:")
+	split_len=int(train_len/k)
+	train_set_copy=train_set
+	folded_set=[]
+	for i in range(k):
+		folded_set.append([])
+		while(len(folded_set[i])<split_len and len(train_set_copy)>0):
+			# print(len(folded_set[i]),split_len)
+			index = rand.randrange(len(train_set_copy))
+			folded_set[i].append(train_set_copy.pop(index))
+	test_acc=[]
+	for i in folded_set:
+		predicted=decision_tree(i,test_set,max_depth,min_size,classes)
+		actual = [row[-1] for row in test_set]
+		correct=0
+		for i in range(len(actual)):
+			if actual[i] == predicted[i]:
+				correct += 1
+		test_acc.append(correct / float(len(actual)) * 100.0)
+	print(max(test_acc))
+
+else:
+	##with out bagging
+	predicted=decision_tree(train_set,test_set,max_depth,min_size,classes)
 	actual = [row[-1] for row in test_set]
 	correct=0
 	for i in range(len(actual)):
 		if actual[i] == predicted[i]:
 			correct += 1
-	test_acc.append(correct / float(len(actual)) * 100.0)
-print(max(test_acc))
+	print correct / float(len(actual)) * 100.0
