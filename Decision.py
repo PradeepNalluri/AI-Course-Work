@@ -126,7 +126,7 @@ def decision_tree(train, test, max_depth, min_size,classes):
 	return(predictions)
 
 
-filename = 'dataset.txt'
+filename = 'SDD.txt'
 dataset = get_data(filename)
 for i in range(len(dataset[0])):
 	conv_float(dataset, i)
