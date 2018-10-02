@@ -20,50 +20,44 @@ def test_split(index, value, dataset):
 		else:
 			right_part.append(row)
 	return left_part, right_part
-def get_entropy_of_split(groups):
+def get_entropy_of_split(groups,classes):
 	entropy=0
 	size=0.0
 	for group in groups:
 		size+=len(group)
 	for group in groups:
 		normalzd_group_size=len(group)/size
-		n=0
-		p=0
 		group_sum=0
-		for vect in group:
-			if vect[-1]==1:
-				p+=1
-			else:
-				n+=1
-		total=len(group)
-		if p==0:
-			p=0.0001
-		if n==0:
-			n=0.0001
-		entropy+=normalzd_group_size*(-1*((n/size)*np.log2(n/size) + (p/size)*np.log2(p/size)))
+		for clas in classes:
+			count=0
+			for vect in group:
+				if vect[-1]==clas:
+					count+=1
+			if count==0:
+				count=0.0001
+			group_sum-=(count/size)*np.log2(count/size)
+		entropy+=normalzd_group_size*group_sum
 	return entropy
-def get_best_split(dataset):
+def get_best_split(dataset,classes):
 	entropy=0
-	n=0
-	p=0
-	for vect in dataset:
-		if(vect[-1]==0):
-			n+=1
-		else:
-			p+=1
-	size=float(n+p)
-	if n==0:
-		n=0.0001
-	if p==0:
-		p=0.0001
-	entropy=-1*((n/size)*np.log2(n/size) + (p/size)*np.log2(p/size))
+	group_sum=0
+	size=float(len(dataset))
+	for clas in classes:
+		count=0
+		for vect in dataset:
+			if vect[-1]==clas:
+				count+=1
+		if count==0:
+			count=0.0001
+		group_sum-=(count/size)*np.log2(count/size)
+	entropy+=group_sum
 	best_info_gain=-1
 	best_f_index=0
 	best_groups=[[],[]]
 	for f_index in range(0,len(dataset[0])-1):
 		for row in dataset:
 			groups=test_split(f_index,row[f_index],dataset)
-			entropy_of_split=get_entropy_of_split(groups)
+			entropy_of_split=get_entropy_of_split(groups,[0,1])
 			information_gain=entropy-entropy_of_split
 			if(information_gain >= best_info_gain):
 				best_info_gain = information_gain
@@ -73,43 +67,42 @@ def get_best_split(dataset):
 	return {'best_value':best_value,'best_f_index':best_f_index
 			,'best_groups':best_groups}
 
-def build_tree(train, max_depth, min_size):
-	root = get_best_split(train)
-	make_child(root, max_depth, min_size, 1)
+def build_tree(train, max_depth, min_size,classes):
+	root = get_best_split(train,classes)
+	make_child(root, max_depth, min_size, 1,classes)
 	return root
 
-def build_terminal(group):
-	count=0
-	count1=0
-	for row in group:
-		if(row[-1]==0):
-			count+=1
-		else:
-			count1+=1
-	if(count>=count1):
-		return 0.0
-	else:
-		return 1.0
-
-def make_child(node, max_depth, min_size, depth):
+def build_terminal(group,classes):
+	max_count=0
+	r_val=classes[0]
+	for clas in classes:
+		count=0
+		for row in group:
+			if row[-1]==clas:
+				count+=1
+		if(count>max_count):
+			max_count=count
+			r_val=clas
+	return r_val
+def make_child(node, max_depth, min_size, depth,classes):
 	left, right = node['best_groups']
 	del(node['best_groups'])
 	if not left or not right:
-		node['left'] = node['right'] = build_terminal(left + right)
+		node['left'] = node['right'] = build_terminal(left + right,classes)
 		return
 	if depth >= max_depth:
-		node['left'], node['right'] = build_terminal(left), build_terminal(right)
+		node['left'], node['right'] = build_terminal(left,classes), build_terminal(right,classes)
 		return
 	if len(left) <= min_size:
-		node['left'] = build_terminal(left)
+		node['left'] = build_terminal(left,classes)
 	else:
-		node['left'] = get_best_split(left)
-		make_child(node['left'], max_depth, min_size, depth+1)
+		node['left'] = get_best_split(left,classes)
+		make_child(node['left'], max_depth, min_size, depth+1,classes)
 	if len(right) <= min_size:
-		node['right'] = build_terminal(right)
+		node['right'] = build_terminal(right,classes)
 	else:
-		node['right'] = get_best_split(right)
-		make_child(node['right'], max_depth, min_size, depth+1)
+		node['right'] = get_best_split(right,classes)
+		make_child(node['right'], max_depth, min_size, depth+1,classes)
 
 
 def predict(node, row):
@@ -124,8 +117,8 @@ def predict(node, row):
 		else:
 			return node['right']
 
-def decision_tree(train, test, max_depth, min_size):
-	tree = build_tree(train, max_depth, min_size)
+def decision_tree(train, test, max_depth, min_size,classes):
+	tree = build_tree(train, max_depth, min_size,classes)
 	predictions = list()
 	for row in test:
 		prediction = predict(tree, row)
@@ -141,6 +134,7 @@ test_len=int(0.1*len(dataset))
 train_len=len(dataset)-test_len
 count=0
 test_set=[]
+classes=[]
 while(count<test_len):
     rand_num=rand.randint(0,len(dataset)-1)
     if(dataset[rand_num] in test_set):
@@ -156,6 +150,8 @@ for vect in dataset:
         pass
     else:
         train_set.append(vect)
+	if(vect[-1] not in classes):
+		classes.append(vect[-1])
 max_depth=5
 min_size=10
 #splitting
@@ -171,7 +167,7 @@ for i in range(k):
 		folded_set[i].append(train_set_copy.pop(index))
 test_acc=[]
 for i in folded_set:
-	predicted=decision_tree(i,test_set,max_depth,min_size)
+	predicted=decision_tree(i,test_set,max_depth,min_size,classes)
 	actual = [row[-1] for row in test_set]
 	correct=0
 	for i in range(len(actual)):
