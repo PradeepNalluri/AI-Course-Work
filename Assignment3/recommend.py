@@ -41,7 +41,6 @@ def get_best_split(dataset,classes):
 				count+=1
 		if count==0:
 			count=0.0001
-        # print dataset
         group_sum-=(count/size)*np.log2(count/size)
 	entropy+=group_sum
 	best_info_gain=-1
@@ -61,7 +60,6 @@ def get_best_split(dataset,classes):
 			,'best_groups':best_groups}
 
 def build_tree(train, max_depth, min_size,classes):
-    # print train
     root = get_best_split(train,classes)
     make_child(root, max_depth, min_size, 1,classes)
     return root
@@ -147,7 +145,6 @@ for row in udata:
     else:
         dataset.append([[row[0],items[row[1]],row[-2]]])
         check=row[0]
-print dataset[654]
 for user_set in dataset:
     copy_userset=user_set
     user_set=[]
@@ -171,7 +168,6 @@ for user_set in dataset:
     count=0
     for vect in user_set:
         if vect in test_set:
-            # print(uid,len(user_set),len(test_set))
             count+=1
             pass
         else:
@@ -180,11 +176,12 @@ for user_set in dataset:
     		classes.append(vect[-1])
     max_depth=9
     min_size=2
-    # print(train_set)
     predicted=decision_tree(train_set,test_set,max_depth,min_size,classes)
+    # print predicted
     actual = [row[-1] for row in test_set]
+    # print actual
     correct=0
     for i in range(len(actual)):
-		if actual[i] == predicted[i]:
+		if actual[i]-predicted[i] <=1:
 			correct += 1
     print (uid,correct / float(len(actual)) * 100.0)
