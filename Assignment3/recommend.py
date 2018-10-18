@@ -1,6 +1,6 @@
 from operator import itemgetter #for sorting
 ##Decision Tree Assignment
-
+import math
 from csv import reader
 import random as rand
 import numpy as np
@@ -116,6 +116,7 @@ def decision_tree(train, test, max_depth, min_size,classes):
 		prediction = predict(tree, row)
 		predictions.append(prediction)
     return(predictions)
+
 ###################
 
 
@@ -145,6 +146,8 @@ for row in udata:
     else:
         dataset.append([[row[0],items[row[1]],row[-2]]])
         check=row[0]
+avg_mae=0
+avg_rmse=0
 for user_set in dataset:
     copy_userset=user_set
     user_set=[]
@@ -188,14 +191,41 @@ for user_set in dataset:
 		for j in test_set[i][0]:
 			new_test_set[i].append(j)
 		new_test_set[i].append(test_set[i][-1])
-	max_depth=9
-    min_size=2
+	max_depth=4
+    min_size=6
     predicted=decision_tree(new_train_set,new_test_set,max_depth,min_size,classes)
     # print predicted
     actual = [row[-1] for row in test_set]
     # print actual
     correct=0
     for i in range(len(actual)):
-		if actual[i]-predicted[i] ==0:
-			correct += 1
-    print (uid,correct / float(len(actual)) * 100.0)
+		correct += abs(actual[i]-predicted[i])
+    mae=float(correct)/len(actual)
+    avg_mae+=mae
+    # print (uid,'mae',mae)
+    correct=0
+    for i in range(len(actual)):
+		correct += abs(actual[i]-predicted[i])*abs(actual[i]-predicted[i])
+    rmse=float(correct)/len(actual)
+    avg_rmse+=math.sqrt(rmse)
+    # num_relavent=0
+    # index_list=[]
+    # for i in range(len(actual)):
+	# 	if actual[i]>=3:
+	# 		num_relavent+=1
+	# 		index_list.append(i)
+	# 		num_reccomend+=1
+    # predicted_index_list=[]
+	# num_reccomend=0
+    # for i in range(len(predicted)):
+	# 	if predicted[i]>=3:
+	# 		predicted_index_list.append(i)
+    # num_reccomend=0
+    # for i in range(len(predicted_index_list)):
+	# 	if predicted_index_list[i] in index_list:
+	# 		num_reccomend+=1
+    # print(predicted_index_list)
+    # print(index_list)
+    # print((100*num_relavent)/num_reccomend)
+	# print (uid,'rmse',math.sqrt(rmse))
+print avg_mae/942,avg_rmse/942
