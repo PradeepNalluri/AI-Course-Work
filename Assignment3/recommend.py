@@ -41,7 +41,7 @@ def get_best_split(dataset,classes):
 				count+=1
 		if count==0:
 			count=0.0001
-        group_sum-=(count/size)*np.log2(count/size)
+		group_sum-=(count/size)*np.log2(count/size)
 	entropy+=group_sum
 	best_info_gain=-1
 	best_f_index=0
@@ -60,9 +60,9 @@ def get_best_split(dataset,classes):
 			,'best_groups':best_groups}
 
 def build_tree(train, max_depth, min_size,classes):
-    root = get_best_split(train,classes)
-    make_child(root, max_depth, min_size, 1,classes)
-    return root
+	root = get_best_split(train,classes)
+	make_child(root, max_depth, min_size, 1,classes)
+	return root
 
 def build_terminal(group,classes):
 	max_count=0
@@ -110,12 +110,12 @@ def predict(node, row):
 			return node['right']
 
 def decision_tree(train, test, max_depth, min_size,classes):
-    tree = build_tree(train, max_depth, min_size,classes)
-    predictions = list()
-    for row in test:
+	tree = build_tree(train, max_depth, min_size,classes)
+	predictions = list()
+	for row in test:
 		prediction = predict(tree, row)
 		predictions.append(prediction)
-    return(predictions)
+	return(predictions)
 
 ###################
 
@@ -182,18 +182,16 @@ for user_set in dataset:
 		new_train_set.append([])
 		for j in train_set[i][0]:
 			new_train_set[i].append(j)
-		new_train_set[i].append(train_set[i][-1])
-
-
+		new_train_set[i].append(float(train_set[i][-1]))
 	new_test_set=[]
 	for i in range(len(test_set)):
 		new_test_set.append([])
 		for j in test_set[i][0]:
 			new_test_set[i].append(j)
-		new_test_set[i].append(test_set[i][-1])
-	max_depth=4
+		new_test_set[i].append(float(test_set[i][-1]))
+    max_depth=4
     min_size=6
-    predicted=decision_tree(new_train_set,new_test_set,max_depth,min_size,classes)
+    predicted=decision_tree(train_set,test_set,max_depth,min_size,classes)
     # print predicted
     actual = [row[-1] for row in test_set]
     # print actual
@@ -208,24 +206,25 @@ for user_set in dataset:
 		correct += abs(actual[i]-predicted[i])*abs(actual[i]-predicted[i])
     rmse=float(correct)/len(actual)
     avg_rmse+=math.sqrt(rmse)
-    # num_relavent=0
-    # index_list=[]
-    # for i in range(len(actual)):
-	# 	if actual[i]>=3:
-	# 		num_relavent+=1
-	# 		index_list.append(i)
-	# 		num_reccomend+=1
-    # predicted_index_list=[]
-	# num_reccomend=0
-    # for i in range(len(predicted)):
-	# 	if predicted[i]>=3:
-	# 		predicted_index_list.append(i)
-    # num_reccomend=0
-    # for i in range(len(predicted_index_list)):
-	# 	if predicted_index_list[i] in index_list:
-	# 		num_reccomend+=1
-    # print(predicted_index_list)
-    # print(index_list)
-    # print((100*num_relavent)/num_reccomend)
-	# print (uid,'rmse',math.sqrt(rmse))
-print avg_mae/942,avg_rmse/942
+
+    num_relavent=0
+    index_list=[]
+    for i in range(len(actual)):
+		if actual[i]>=3:
+			num_relavent+=1
+			index_list.append(i)
+			num_relavent+=1
+    predicted_index_list=[]
+    num_reccomend=0
+    for i in range(len(predicted)):
+		if predicted[i]>=3:
+			predicted_index_list.append(i)
+			num_reccomend+=1
+    num_reccomend_relv=0
+    for i in range(len(predicted_index_list)):
+		if predicted_index_list[i] in index_list:
+			num_reccomend_relv+=1
+    print 100.0*num_reccomend/num_relavent
+    print (uid,'rmse',math.sqrt(rmse))
+
+# print avg_mae/942,avg_rmse/942
