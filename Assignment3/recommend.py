@@ -174,14 +174,28 @@ for user_set in dataset:
             train_set.append(vect)
     	if(vect[-1] not in classes):
     		classes.append(vect[-1])
-    max_depth=9
+	new_train_set=[]
+	for i in range(len(train_set)):
+		new_train_set.append([])
+		for j in train_set[i][0]:
+			new_train_set[i].append(j)
+		new_train_set[i].append(train_set[i][-1])
+
+
+	new_test_set=[]
+	for i in range(len(test_set)):
+		new_test_set.append([])
+		for j in test_set[i][0]:
+			new_test_set[i].append(j)
+		new_test_set[i].append(test_set[i][-1])
+	max_depth=9
     min_size=2
-    predicted=decision_tree(train_set,test_set,max_depth,min_size,classes)
+    predicted=decision_tree(new_train_set,new_test_set,max_depth,min_size,classes)
     # print predicted
     actual = [row[-1] for row in test_set]
     # print actual
     correct=0
     for i in range(len(actual)):
-		if actual[i]-predicted[i] <=1:
+		if actual[i]-predicted[i] ==0:
 			correct += 1
     print (uid,correct / float(len(actual)) * 100.0)
