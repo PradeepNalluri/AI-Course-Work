@@ -4,6 +4,7 @@ import math
 from csv import reader
 import random as rand
 import numpy as np
+import matplotlib.pyplot as plt
 def test_split(index, value, dataset):
 	left_part, right_part = list(), list()
 	for row in dataset:
@@ -118,7 +119,18 @@ def decision_tree(train, test, max_depth, min_size,classes):
 	return(predictions)
 
 ###################
-
+def list_duplicates_of(seq,item):
+    start_at = -1
+    locs = []
+    while True:
+        try:
+            loc = seq.index(item,start_at+1)
+        except ValueError:
+            break
+        else:
+            locs.append(loc)
+            start_at = loc
+    return locs
 
 #Data FIle
 fname="ml-100k/u.data"
@@ -137,7 +149,7 @@ for i in range(len(uitem)):
     feature_vect=str(uitem[i][-38:-1])
     uitem[i]=map(str,uitem[i].split('|'))
     id=float(uitem[i][0])
-    items[id]=str_list=map(float,feature_vect.split('|'))
+    items[id]=map(float,feature_vect.split('|'))
 dataset=list()
 check=0
 for row in udata:
@@ -148,7 +160,11 @@ for row in udata:
         check=row[0]
 avg_mae=0
 avg_rmse=0
+avg_precision=[]
+avg_recall=[]
 for user_set in dataset:
+    avg_precision.append([])
+    avg_recall.append([])
     copy_userset=user_set
     user_set=[]
     for i in copy_userset:
@@ -206,25 +222,71 @@ for user_set in dataset:
 		correct += abs(actual[i]-predicted[i])*abs(actual[i]-predicted[i])
     rmse=float(correct)/len(actual)
     avg_rmse+=math.sqrt(rmse)
+    K=[10,20,30,40,50,60,70]
+    actual_copy=list(actual)
+    predicted_copy=list(predicted)
+    for k in K:
+        actual_copy.sort(reverse=True)
+        predicted_copy.sort(reverse=True)
+        want_actaul=actual_copy[0:k]
+        want_predicted=predicted_copy[0:k]
+        num_relavent=0
+        actual_index_list=[]
+        predicted_index_list=[]
+        for i in range(len(actual)):
+			if actual[i]>=2.5:
+				num_relavent+=1
+        num_reccomend=0
+        for i in range(len(predicted)):
+			if predicted[i]>=2.5:
+				num_reccomend+=1
+        num_reccomend_relv=0
+		# for act in actual:
 
-    num_relavent=0
-    index_list=[]
-    for i in range(len(actual)):
-		if actual[i]>=3:
-			num_relavent+=1
-			index_list.append(i)
-			num_relavent+=1
-    predicted_index_list=[]
-    num_reccomend=0
-    for i in range(len(predicted)):
-		if predicted[i]>=3:
-			predicted_index_list.append(i)
-			num_reccomend+=1
-    num_reccomend_relv=0
-    for i in range(len(predicted_index_list)):
-		if predicted_index_list[i] in index_list:
-			num_reccomend_relv+=1
-    print 100.0*num_reccomend/num_relavent
-    print (uid,'rmse',math.sqrt(rmse))
+				# num_reccomend_relv=0
+			    # for i in range(len(predicted_index_list)):
+				# 	if predicted_index_list[i] in index_list:
+				# 		num_reccomend_relv+=1
+        for sort_act in want_actaul:
+			dups=list_duplicates_of(actual,sort_act)
+			pred_dups=list_duplicates_of(predicted,sort_act)
+			# print pred_dups
+			# print dups
+			for ped_dup in pred_dups:
+				if ped_dup in dups:
+					num_reccomend_relv+=1
+					break
+        if(num_relavent!=0 and num_reccomend!=0):
+			pass
+			avg_precision[uid-1].append(num_reccomend_relv*100.0/num_relavent)
+			avg_recall[uid-1].append(num_reccomend_relv*100.0/num_reccomend)
+			# print("Recall is %f for user %d @K %d",num_reccomend_relv*100.0/num_relavent,uid,k)
+			# print("Precision is %f for user %d @K %d",num_reccomend_relv*100.0/num_reccomend,uid,k)
+        else:
+			pass
+# print avg_mae/943,avg_rmse/943
+aa_precision=[]
+aa_recall=[]
+for j in range(len(K)):
+	sum=0
+	for i in range(len(avg_precision)):
+		try:
+			sum+=avg_precision[i][j]
+		except:
+			sum+=0
+	# print "Average Precision at k: ",K[j]," is ",sum/943
+	aa_precision.append(sum/943)
 
-# print avg_mae/942,avg_rmse/942
+for j in range(len(K)):
+	sum=0
+	for i in range(len(avg_recall)):
+		try:
+			sum+=avg_recall[i][j]
+		except:
+			sum+=0
+	# print "Average Recall at k: ",K[j]," is ",sum/943
+	aa_recall.append(sum/943)
+plt.plot(K,aa_precision)
+plt.show()
+plt.plot(K,aa_recall)
+plt.show()
