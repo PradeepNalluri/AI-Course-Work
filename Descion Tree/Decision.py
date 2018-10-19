@@ -152,6 +152,7 @@ for vect in dataset:
         train_set.append(vect)
 	if(vect[-1] not in classes):
 		classes.append(vect[-1])
+print(train_set)
 max_depth=5
 min_size=10
 #splitting
