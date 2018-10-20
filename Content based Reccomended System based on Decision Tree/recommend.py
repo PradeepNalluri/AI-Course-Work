@@ -205,8 +205,8 @@ for user_set in dataset:
 		for j in test_set[i][0]:
 			new_test_set[i].append(j)
 		new_test_set[i].append(float(test_set[i][-1]))
-    max_depth=4
-    min_size=6
+    max_depth=9
+    min_size=5
     predicted=decision_tree(train_set,test_set,max_depth,min_size,classes)
     # print predicted
     actual = [row[-1] for row in test_set]
@@ -222,44 +222,33 @@ for user_set in dataset:
 		correct += abs(actual[i]-predicted[i])*abs(actual[i]-predicted[i])
     rmse=float(correct)/len(actual)
     avg_rmse+=math.sqrt(rmse)
-    K=[10,20,30,40,50,60,70]
+    K=[5,10,15,20,25]
     actual_copy=list(actual)
     predicted_copy=list(predicted)
     for k in K:
         actual_copy.sort(reverse=True)
         predicted_copy.sort(reverse=True)
-        want_actaul=actual_copy[0:k]
-        want_predicted=predicted_copy[0:k]
-        num_relavent=0
-        actual_index_list=[]
+        # want_actaul=actual_copy[0:k]
+        reccommended_set=predicted_copy[0:k]
         predicted_index_list=[]
-        for i in range(len(actual)):
-			if actual[i]>=2.5:
-				num_relavent+=1
         num_reccomend=0
         for i in range(len(predicted)):
-			if predicted[i]>=2.5:
+			if predicted[i]>=3:
 				num_reccomend+=1
         num_reccomend_relv=0
-		# for act in actual:
-
-				# num_reccomend_relv=0
-			    # for i in range(len(predicted_index_list)):
-				# 	if predicted_index_list[i] in index_list:
-				# 		num_reccomend_relv+=1
-        for sort_act in want_actaul:
-			dups=list_duplicates_of(actual,sort_act)
+        for sort_act in reccommended_set:
+			# dups=list_duplicates_of(actual,sort_act)
 			pred_dups=list_duplicates_of(predicted,sort_act)
-			# print pred_dups
-			# print dups
 			for ped_dup in pred_dups:
-				if ped_dup in dups:
+				if actual[ped_dup]>3:
+					# actual.pop(ped_dup)
 					num_reccomend_relv+=1
 					break
-        if(num_relavent!=0 and num_reccomend!=0):
-			pass
-			avg_precision[uid-1].append(num_reccomend_relv*100.0/num_relavent)
-			avg_recall[uid-1].append(num_reccomend_relv*100.0/num_reccomend)
+        if(num_reccomend_relv>num_reccomend):
+             print(num_reccomend_relv,num_reccomend)
+        if(num_reccomend!=0):
+            avg_precision[uid-1].append(num_reccomend_relv*100.0/k)
+            avg_recall[uid-1].append(num_reccomend_relv*100.0/len(reccommended_set))
 			# print("Recall is %f for user %d @K %d",num_reccomend_relv*100.0/num_relavent,uid,k)
 			# print("Precision is %f for user %d @K %d",num_reccomend_relv*100.0/num_reccomend,uid,k)
         else:
@@ -268,24 +257,25 @@ for user_set in dataset:
 aa_precision=[]
 aa_recall=[]
 for j in range(len(K)):
-	sum=0
+	suml=0
 	for i in range(len(avg_precision)):
 		try:
-			sum+=avg_precision[i][j]
+			suml+=avg_precision[i][j]
 		except:
-			sum+=0
+			suml+=0
 	# print "Average Precision at k: ",K[j]," is ",sum/943
-	aa_precision.append(sum/943)
+	aa_precision.append(suml/943)
 
 for j in range(len(K)):
-	sum=0
+	suml=0
 	for i in range(len(avg_recall)):
 		try:
-			sum+=avg_recall[i][j]
+			suml+=avg_recall[i][j]
 		except:
-			sum+=0
+			suml+=0
 	# print "Average Recall at k: ",K[j]," is ",sum/943
-	aa_recall.append(sum/943)
+	aa_recall.append(suml/943)
+
 plt.plot(K,aa_precision)
 plt.show()
 plt.plot(K,aa_recall)
