@@ -291,6 +291,6 @@ for j in range(len(K)):
 	aa_recall.append(suml/(len(avg_recall)-count))
 print aa_precision
 plt.plot(K,aa_precision)
-plt.show()
+# plt.show()
 plt.plot(K,aa_recall)
 plt.show()
