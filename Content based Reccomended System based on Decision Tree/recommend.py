@@ -163,9 +163,8 @@ avg_mae=0
 avg_rmse=0
 avg_precision=[]
 avg_recall=[]
+cc=0
 for user_set in dataset:
-    avg_precision.append([])
-    avg_recall.append([])
     copy_userset=user_set
     user_set=[]
     for i in copy_userset:
@@ -223,56 +222,74 @@ for user_set in dataset:
 		correct += abs(actual[i]-predicted[i])*abs(actual[i]-predicted[i])
     rmse=float(correct)/len(actual)
     avg_rmse+=math.sqrt(rmse)
-    K=[5,10,15]
+    K=[5,10,15,20,30]
     predicted_copy=dict(enumerate(predicted))
     sorted_pred = sorted(predicted_copy.items(), key=operator.itemgetter(1),reverse=True)
-    for k in K:
-        # want_actaul=actual_copy[0:k]
-        if(k<len(sorted_pred)):
-            reccommended_set=[]
-            for kk in range(k):
-	            # print len(sorted_pred)
-	            reccommended_set.append(sorted_pred[kk])
-            num_reccomend=0
-            for i in range(len(predicted)):
-				if predicted[i]>=2.5:
-					num_reccomend+=1
-            num_reccomend_relv=0
-            for reccomendation in reccommended_set:
-				if(actual[reccomendation[0]]>=2.5):
-					num_reccomend_relv+=1
-            if(num_reccomend!=0 and num_reccomend_relv!=0):
-	            avg_precision[uid-1].append(num_reccomend_relv*100.0/k)
-	            avg_recall[uid-1].append(num_reccomend_relv*100.0/num_reccomend)
-				# print("Recall is %f for user %d @K %d",num_reccomend_relv*100.0/num_relavent,uid,k)
-				# print("Precision is %f for user %d @K %d",num_reccomend_relv*100.0/num_reccomend,uid,k
-            else:
-				pass
-        else:
-			pass
-# print avg_mae/943,avg_rmse/943
+    num_reccomend=0
+    for i in range(len(actual)):
+		if actual[i]>=3.5:
+			num_reccomend+=1
+    max_k=max(K)
+    if(len(sorted_pred)>=max_k):
+        avg_precision.append([])
+        avg_recall.append([])
+        for k in K:
+	        # want_actaul=actual_copy[0:k]
+	        if(k<len(sorted_pred)):
+	            reccommended_set=[]
+	            for kk in range(k):
+		            # print(sorted_pred[kk])
+		            reccommended_set.append(sorted_pred[kk])
+	            # print reccommended_set
+	            # print "\n",actual
+	            num_reccomend_relv=0
+	            # print(len(reccommended_set))
+	            for reccomendation in reccommended_set:
+	                # print actual[reccomendation[0]]
+	                if(actual[reccomendation[0]]>=3.5):
+						num_reccomend_relv+=1
+						# print num_reccomend_relv
+	            if(num_reccomend!=0 and num_reccomend_relv!=0):
+		            avg_precision[cc].append(num_reccomend_relv*100.0/k)
+		            avg_recall[cc].append(num_reccomend_relv*100.0/num_reccomend)
+					# print("Recall is %f for user %d @K %d",num_reccomend_relv*100.0/num_relavent,uid,k)
+					# print("Precision is %f for user %d @K %d",num_reccomend_relv*100.0/num_reccomend,uid,k
+	            else:
+				    avg_precision[cc].append(0);avg_recall[cc].append(0)
+	        # else:
+			# 	l=[0.0,0.0,0.0]
+			# 	avg_precision[uid-1]=l
+			# 	avg_recall[uid-1]=l
+        cc+=1
+    else:
+		pass
+    # print "\n"
+
+
+# print avg_recall
 aa_precision=[]
 aa_recall=[]
+print len(avg_recall)
 for j in range(len(K)):
 	suml=0
 	for i in range(len(avg_precision)):
 		try:
-			suml+=avg_precision[i][j]
+		    suml+=avg_precision[i][j]
 		except:
-			suml+=0
+		    suml+=0
 	# print "Average Precision at k: ",K[j]," is ",sum/943
-	aa_precision.append(suml/943)
+	aa_precision.append(suml/(len(avg_precision)))
 
 for j in range(len(K)):
 	suml=0
 	for i in range(len(avg_recall)):
 		try:
-			suml+=avg_recall[i][j]
+		    suml+=avg_recall[i][j]
 		except:
 			suml+=0
 	# print "Average Recall at k: ",K[j]," is ",sum/943
-	aa_recall.append(suml/943)
-
+	aa_recall.append(suml/(len(avg_recall)-count))
+print aa_precision
 plt.plot(K,aa_precision)
 plt.show()
 plt.plot(K,aa_recall)
