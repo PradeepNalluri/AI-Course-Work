@@ -1,6 +1,7 @@
 from operator import itemgetter #for sorting
 ##Decision Tree Assignment
 import math
+import operator
 from csv import reader
 import random as rand
 import numpy as np
@@ -222,35 +223,31 @@ for user_set in dataset:
 		correct += abs(actual[i]-predicted[i])*abs(actual[i]-predicted[i])
     rmse=float(correct)/len(actual)
     avg_rmse+=math.sqrt(rmse)
-    K=[5,10,15,20,25]
-    actual_copy=list(actual)
-    predicted_copy=list(predicted)
+    K=[5,10,15]
+    predicted_copy=dict(enumerate(predicted))
+    sorted_pred = sorted(predicted_copy.items(), key=operator.itemgetter(1),reverse=True)
     for k in K:
-        actual_copy.sort(reverse=True)
-        predicted_copy.sort(reverse=True)
         # want_actaul=actual_copy[0:k]
-        reccommended_set=predicted_copy[0:k]
-        predicted_index_list=[]
-        num_reccomend=0
-        for i in range(len(predicted)):
-			if predicted[i]>=3:
-				num_reccomend+=1
-        num_reccomend_relv=0
-        for sort_act in reccommended_set:
-			# dups=list_duplicates_of(actual,sort_act)
-			pred_dups=list_duplicates_of(predicted,sort_act)
-			for ped_dup in pred_dups:
-				if actual[ped_dup]>3:
-					# actual.pop(ped_dup)
+        if(k<len(sorted_pred)):
+            reccommended_set=[]
+            for kk in range(k):
+	            # print len(sorted_pred)
+	            reccommended_set.append(sorted_pred[kk])
+            num_reccomend=0
+            for i in range(len(predicted)):
+				if predicted[i]>=2.5:
+					num_reccomend+=1
+            num_reccomend_relv=0
+            for reccomendation in reccommended_set:
+				if(actual[reccomendation[0]]>=2.5):
 					num_reccomend_relv+=1
-					break
-        if(num_reccomend_relv>num_reccomend):
-             print(num_reccomend_relv,num_reccomend)
-        if(num_reccomend!=0):
-            avg_precision[uid-1].append(num_reccomend_relv*100.0/k)
-            avg_recall[uid-1].append(num_reccomend_relv*100.0/len(reccommended_set))
-			# print("Recall is %f for user %d @K %d",num_reccomend_relv*100.0/num_relavent,uid,k)
-			# print("Precision is %f for user %d @K %d",num_reccomend_relv*100.0/num_reccomend,uid,k)
+            if(num_reccomend!=0 and num_reccomend_relv!=0):
+	            avg_precision[uid-1].append(num_reccomend_relv*100.0/k)
+	            avg_recall[uid-1].append(num_reccomend_relv*100.0/num_reccomend)
+				# print("Recall is %f for user %d @K %d",num_reccomend_relv*100.0/num_relavent,uid,k)
+				# print("Precision is %f for user %d @K %d",num_reccomend_relv*100.0/num_reccomend,uid,k
+            else:
+				pass
         else:
 			pass
 # print avg_mae/943,avg_rmse/943
